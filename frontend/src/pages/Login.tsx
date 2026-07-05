@@ -1,0 +1,129 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Activity, Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import { Button, Input, ErrorMessage } from '@/components/shared'
+import { getErrorMessage } from '@/lib/utils'
+
+const demoAccounts = [
+  { label: 'Super Admin', email: 'superadmin@hospora.test' },
+  { label: 'Admin', email: 'admin@cityhospital.com' },
+  { label: 'Doctor', email: 'jcarter@cityhospital.com' },
+  { label: 'Receptionist', email: 'reception@cityhospital.com' },
+  { label: 'Nurse', email: 'nurse@cityhospital.com' },
+  { label: 'Lab Tech', email: 'lab@cityhospital.com' },
+  { label: 'Pharmacist', email: 'pharmacy@cityhospital.com' },
+]
+
+const demoPassword = 'Demo@1234'
+
+export default function LoginPage() {
+  const { login } = useAuth()
+  const [form, setForm] = useState({ email: '', password: '' })
+  const [showPwd, setShowPwd] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      await login(form.email, form.password)
+    } catch (err) {
+      setError(getErrorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+              <Activity className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-slate-900 text-2xl">Hospora</span>
+          </Link>
+          <h1 className="text-2xl font-bold text-slate-900">Welcome back</h1>
+          <p className="text-slate-500 mt-1">Sign in to your hospital account</p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+          {error && <div className="mb-4"><ErrorMessage message={error} /></div>}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label="Email address"
+              type="email"
+              placeholder="doctor@hospital.com"
+              icon={<Mail size={16} />}
+              value={form.email}
+              onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+              required
+              autoComplete="email"
+            />
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-slate-700">Password</label>
+              <div className="relative">
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type={showPwd ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                  required
+                  autoComplete="current-password"
+                  className="w-full pl-10 pr-10 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPwd(!showPwd)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <Button type="submit" size="lg" loading={loading} className="w-full">
+              Sign In
+            </Button>
+          </form>
+
+          {/* Demo credentials */}
+          <div className="mt-6 p-3 bg-blue-50 rounded-lg">
+            <p className="text-xs font-semibold text-blue-700 mb-2">Demo Credentials</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {demoAccounts.map(account => (
+                <button
+                  key={account.email}
+                  type="button"
+                  onClick={() => setForm({ email: account.email, password: demoPassword })}
+                  className="text-left rounded-md border border-blue-100 bg-white/70 px-2.5 py-2 hover:border-blue-300 hover:bg-white transition-colors"
+                >
+                  <span className="block text-xs font-semibold text-blue-800">{account.label}</span>
+                  <span className="block text-[11px] text-blue-600 truncate">{account.email}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-blue-700 mt-2">Password for all demo users: {demoPassword}</p>
+            <p className="text-[11px] text-blue-600 mt-1">Patients are sample records inside the app, not login users.</p>
+          </div>
+        </div>
+
+        <p className="text-center text-sm text-slate-600 mt-6">
+          Don't have an account?{' '}
+          <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700">
+            Register your hospital
+          </Link>
+        </p>
+      </div>
+    </div>
+  )
+}

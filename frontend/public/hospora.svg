@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Hospora">
+  <rect width="64" height="64" rx="14" fill="#2563eb"/>
+  <path d="M18 17h8v12h12V17h8v30h-8V35H26v12h-8V17z" fill="#fff"/>
+  <path d="M45 42c4.5-3.5 7-7.2 7-11.2a6.8 6.8 0 0 0-12-4.3 6.8 6.8 0 0 0-12 4.3c0 4 2.5 7.7 7 11.2l5 3.9 5-3.9z" fill="#bfdbfe"/>
+</svg>
