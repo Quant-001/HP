@@ -12,6 +12,8 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>
   register: (data: RegisterData) => Promise<void>
+  googleLogin: (credential: string) => Promise<void>
+  googleRegister: (data: GoogleRegisterData) => Promise<void>
   logout: () => void
   refreshUser: () => Promise<void>
 }
@@ -22,6 +24,14 @@ interface RegisterData {
   admin_name: string
   admin_email: string
   password: string
+}
+
+interface GoogleRegisterData {
+  credential: string
+  hospital_name: string
+  hospital_email: string
+  hospital_phone?: string
+  admin_name?: string
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -81,6 +91,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
+  const googleLogin = async (credential: string) => {
+    const data = await authApi.google({ credential, mode: 'login' }) as any
+    setAuthData({ access: data.access, refresh: data.refresh })
+    setState({
+      user: data.user,
+      hospital: data.user.hospital_detail,
+      isAuthenticated: true,
+      isLoading: false,
+    })
+  }
+
+  const googleRegister = async (formData: GoogleRegisterData) => {
+    const data = await authApi.google({ ...formData, mode: 'register' }) as any
+    setAuthData({ access: data.access, refresh: data.refresh })
+    setState({
+      user: data.user,
+      hospital: data.user.hospital_detail,
+      isAuthenticated: true,
+      isLoading: false,
+    })
+  }
+
   const logout = () => {
     clearAuthData()
     setState({ user: null, hospital: null, isLoading: false, isAuthenticated: false })
@@ -88,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ ...state, login, register, googleLogin, googleRegister, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 from .models import User
 from apps.hospitals.models import Hospital
 from apps.hospitals.serializers import HospitalSerializer
@@ -60,6 +63,79 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Account is disabled.')
         data['user'] = user
         return data
+
+
+class GoogleAuthSerializer(serializers.Serializer):
+    credential = serializers.CharField(write_only=True)
+    mode = serializers.ChoiceField(choices=['login', 'register'], default='login')
+    hospital_name = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    hospital_email = serializers.EmailField(required=False, allow_blank=True)
+    hospital_phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    hospital_address = serializers.CharField(required=False, allow_blank=True)
+    admin_name = serializers.CharField(max_length=255, required=False, allow_blank=True)
+
+    def validate(self, data):
+        if not settings.GOOGLE_CLIENT_ID:
+            raise serializers.ValidationError('Google sign-in is not configured.')
+
+        try:
+            payload = id_token.verify_oauth2_token(
+                data['credential'],
+                google_requests.Request(),
+                settings.GOOGLE_CLIENT_ID,
+            )
+        except ValueError:
+            raise serializers.ValidationError('Invalid Google credential.')
+
+        if payload.get('iss') not in ['accounts.google.com', 'https://accounts.google.com']:
+            raise serializers.ValidationError('Invalid Google credential issuer.')
+        if not payload.get('email_verified'):
+            raise serializers.ValidationError('Google email must be verified.')
+
+        data['google_payload'] = payload
+        return data
+
+    def create(self, validated_data):
+        payload = validated_data['google_payload']
+        email = User.objects.normalize_email(payload['email'])
+        user = User.objects.filter(email=email).select_related('hospital').first()
+
+        if validated_data['mode'] == 'login':
+            if not user:
+                raise serializers.ValidationError('No Hospora account exists for this Google email.')
+            if not user.is_active:
+                raise serializers.ValidationError('Account is disabled.')
+            return user, None
+
+        if user:
+            raise serializers.ValidationError('Email already exists. Please sign in instead.')
+
+        hospital_name = validated_data.get('hospital_name', '').strip()
+        hospital_email = validated_data.get('hospital_email', '').strip()
+        if not hospital_name or not hospital_email:
+            raise serializers.ValidationError('Hospital name and email are required.')
+        if Hospital.objects.filter(email=hospital_email).exists():
+            raise serializers.ValidationError('Hospital already registered.')
+
+        hospital = Hospital.objects.create(
+            name=hospital_name,
+            email=hospital_email,
+            phone=validated_data.get('hospital_phone', ''),
+            address=validated_data.get('hospital_address', ''),
+            plan='trial',
+            subscription_status='trial',
+            total_beds=25,
+        )
+        admin = User.objects.create_user(
+            email=email,
+            password=None,
+            name=(validated_data.get('admin_name') or payload.get('name') or email).strip(),
+            role='hospital_admin',
+            hospital=hospital,
+        )
+        admin.set_unusable_password()
+        admin.save(update_fields=['password'])
+        return admin, hospital
 
 
 class UserSerializer(serializers.ModelSerializer):

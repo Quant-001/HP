@@ -26,6 +26,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
       SECRET_KEY: dev-secret-key-not-for-production
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     depends_on:
       - db
 
@@ -41,6 +42,7 @@ services:
       - "5173:5173"
     environment:
       VITE_API_URL: http://localhost:8000/api
+      VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
 
 volumes:
   postgres_data_dev:

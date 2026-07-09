@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Activity, ArrowRight, BarChart3, Bed, Building2, CalendarCheck,
@@ -24,10 +25,17 @@ const workflows = [
 ]
 
 const plans = [
-  { name: 'Trial', price: '$0', features: ['2 departments', '25 beds', '3 doctors', 'Core front desk'] },
-  { name: 'Basic', price: '$49', features: ['5 departments', '50 beds', '5 doctors', 'Medical records'] },
-  { name: 'Advanced', price: '$149', features: ['15 departments', '200 beds', '20 doctors', 'Lab and pharmacy roles'], highlight: true },
-  { name: 'Enterprise', price: '$399', features: ['Unlimited capacity', 'Payroll ready', 'Audit workflows', 'Advanced reports'] },
+  { id: 'trial', name: 'Trial', monthlyPrice: 0, features: ['2 departments', '25 beds', '3 doctors', 'Core front desk'] },
+  { id: 'basic', name: 'Basic', monthlyPrice: 49, features: ['5 departments', '50 beds', '5 doctors', 'Medical records'] },
+  { id: 'advanced', name: 'Advanced', monthlyPrice: 149, features: ['15 departments', '200 beds', '20 doctors', 'Lab and pharmacy roles'], highlight: true },
+  { id: 'enterprise', name: 'Enterprise', monthlyPrice: 399, features: ['Unlimited capacity', 'Payroll ready', 'Audit workflows', 'Advanced reports'] },
+]
+
+const billingTerms = [
+  { months: 1, label: 'Monthly', suffix: '/mo' },
+  { months: 3, label: '3 months', suffix: '/3 mo' },
+  { months: 12, label: '12 months', suffix: '/12 mo' },
+  { months: 24, label: '24 months', suffix: '/24 mo' },
 ]
 
 const trustStats = [
@@ -37,6 +45,10 @@ const trustStats = [
 ]
 
 export default function LandingPage() {
+  const [billingMonths, setBillingMonths] = useState(1)
+  const selectedTerm = billingTerms.find(term => term.months === billingMonths) ?? billingTerms[0]
+  const formatPrice = (monthlyPrice: number) => monthlyPrice === 0 ? '$0' : `$${monthlyPrice * billingMonths}`
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <header className="absolute left-0 right-0 top-0 z-20">
@@ -190,6 +202,18 @@ export default function LandingPage() {
           <div className="mb-10 text-center">
             <p className="text-sm font-bold uppercase tracking-wide text-blue-600">Plans</p>
             <h2 className="mt-2 text-3xl font-bold text-slate-950 sm:text-4xl">Start small, grow by hospital capacity</h2>
+            <div className="mx-auto mt-6 grid max-w-xl grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1 sm:grid-cols-4">
+              {billingTerms.map(term => (
+                <button
+                  key={term.months}
+                  type="button"
+                  onClick={() => setBillingMonths(term.months)}
+                  className={`rounded-lg px-3 py-2 text-sm font-bold transition ${billingMonths === term.months ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-slate-900'}`}
+                >
+                  {term.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -200,9 +224,16 @@ export default function LandingPage() {
               >
                 <h3 className="text-xl font-bold">{plan.name}</h3>
                 <div className="mt-4 flex items-end gap-1">
-                  <span className="text-4xl font-extrabold">{plan.price}</span>
-                  <span className={plan.highlight ? 'pb-1 text-blue-100' : 'pb-1 text-slate-500'}>/mo</span>
+                  <span className="text-4xl font-extrabold">{formatPrice(plan.monthlyPrice)}</span>
+                  <span className={plan.highlight ? 'pb-1 text-blue-100' : 'pb-1 text-slate-500'}>{plan.id === 'trial' ? '/mo' : selectedTerm.suffix}</span>
                 </div>
+                <p className={`mt-2 text-xs font-semibold ${plan.highlight ? 'text-blue-100' : 'text-slate-500'}`}>
+                  {plan.id === 'trial'
+                    ? 'Free for 1 month trial access'
+                    : billingMonths === 1
+                      ? 'Monthly billing'
+                      : `$${plan.monthlyPrice}/mo billed every ${billingMonths} months`}
+                </p>
                 <ul className="mt-6 space-y-3">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2 text-sm">

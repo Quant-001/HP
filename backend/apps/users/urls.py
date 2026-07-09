@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('register/', views.register, name='auth-register'),
     path('login/', views.login, name='auth-login'),
+    path('google/', views.google_auth, name='auth-google'),
     path('me/', views.me, name='auth-me'),
     path('profile/', views.update_profile, name='auth-profile'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),

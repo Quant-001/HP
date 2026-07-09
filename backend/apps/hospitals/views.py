@@ -53,6 +53,7 @@ def upgrade_hospital(request, pk):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         hospital.plan = requested_plan
+        hospital.billing_cycle_months = serializer.validated_data['billing_cycle_months']
         hospital.subscription_status = 'active'
         hospital.save()
         return Response(HospitalSerializer(hospital).data)

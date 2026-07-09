@@ -1,6 +1,9 @@
 """Hospital models - the root tenant entity."""
 
+from datetime import timedelta
+
 from django.db import models
+from django.utils import timezone
 
 
 class Hospital(models.Model):
@@ -9,6 +12,12 @@ class Hospital(models.Model):
         ('basic', 'Basic'),
         ('advanced', 'Advanced'),
         ('enterprise', 'Enterprise'),
+    ]
+    BILLING_CYCLE_CHOICES = [
+        (1, 'Monthly'),
+        (3, '3 months'),
+        (12, '12 months'),
+        (24, '24 months'),
     ]
     STATUS_CHOICES = [
         ('active', 'Active'),
@@ -24,7 +33,9 @@ class Hospital(models.Model):
     country = models.CharField(max_length=100, default='US')
     logo = models.ImageField(upload_to='hospital_logos/', blank=True, null=True)
     plan = models.CharField(max_length=20, choices=PLAN_CHOICES, default='trial')
+    billing_cycle_months = models.PositiveSmallIntegerField(choices=BILLING_CYCLE_CHOICES, default=1)
     subscription_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='trial')
+    trial_ends_at = models.DateTimeField(blank=True, null=True)
     total_beds = models.PositiveIntegerField(default=25)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -79,6 +90,16 @@ class Hospital(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if self.plan == 'trial':
+            self.billing_cycle_months = 1
+            self.subscription_status = 'trial'
+            if not self.trial_ends_at:
+                self.trial_ends_at = timezone.now() + timedelta(days=30)
+        elif self.subscription_status == 'trial':
+            self.subscription_status = 'active'
+        super().save(*args, **kwargs)
 
     @property
     def has_pharmacy(self):

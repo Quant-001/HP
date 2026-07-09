@@ -75,6 +75,7 @@ export const del = <T>(url: string, config?: AxiosRequestConfig) =>
 export const authApi = {
   register: (data: unknown) => post('/auth/register/', data),
   login: (data: unknown) => post('/auth/login/', data),
+  google: (data: unknown) => post('/auth/google/', data),
   me: () => get('/auth/me/'),
   updateProfile: (data: unknown) => patch('/auth/profile/', data),
   refreshToken: (refresh: string) => post('/auth/token/refresh/', { refresh }),
@@ -86,7 +87,8 @@ export const hospitalApi = {
   list: (params?: object) => get('/hospitals/', { params }),
   get: (id: number) => get(`/hospitals/${id}/`),
   update: (id: number, data: unknown) => put(`/hospitals/${id}/`, data),
-  upgrade: (id: number, plan: string) => post(`/hospitals/${id}/upgrade/`, { plan }),
+  upgrade: (id: number, plan: string, billing_cycle_months = 1) =>
+    post(`/hospitals/${id}/upgrade/`, { plan, billing_cycle_months }),
 }
 
 // ─── Patients API ─────────────────────────────────────────────────────────────

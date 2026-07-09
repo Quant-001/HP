@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from .serializers import (
-    RegisterSerializer, LoginSerializer, UserSerializer, get_tokens_for_user
+    RegisterSerializer, LoginSerializer, GoogleAuthSerializer, UserSerializer, get_tokens_for_user
 )
 
 
@@ -41,6 +41,28 @@ def login(request):
             'user': UserSerializer(user).data,
             **tokens,
         })
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_auth(request):
+    """Login or register with a verified Google account."""
+    serializer = GoogleAuthSerializer(data=request.data)
+    if serializer.is_valid():
+        user, hospital = serializer.save()
+        tokens = get_tokens_for_user(user)
+        response = {
+            'user': UserSerializer(user).data,
+            **tokens,
+        }
+        if hospital:
+            response['hospital'] = {
+                'id': hospital.id,
+                'name': hospital.name,
+                'plan': hospital.plan,
+            }
+        return Response(response, status=status.HTTP_201_CREATED if hospital else status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

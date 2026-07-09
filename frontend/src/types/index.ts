@@ -21,7 +21,9 @@ export interface Hospital {
   city: string
   country: string
   plan: Plan
+  billing_cycle_months: 1 | 3 | 12 | 24
   subscription_status: SubscriptionStatus
+  trial_ends_at: string | null
   total_beds: number
   has_pharmacy: boolean
   has_lab: boolean

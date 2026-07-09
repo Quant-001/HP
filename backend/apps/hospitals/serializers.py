@@ -56,3 +56,9 @@ class HospitalSerializer(serializers.ModelSerializer):
 
 class HospitalUpgradeSerializer(serializers.Serializer):
     plan = serializers.ChoiceField(choices=['trial', 'basic', 'advanced', 'enterprise'])
+    billing_cycle_months = serializers.ChoiceField(choices=[1, 3, 12, 24], default=1)
+
+    def validate(self, attrs):
+        if attrs['plan'] == 'trial':
+            attrs['billing_cycle_months'] = 1
+        return attrs

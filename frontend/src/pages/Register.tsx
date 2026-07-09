@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Activity, Building2, User, Mail, Lock } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Button, Input, ErrorMessage } from '@/components/shared'
+import { GoogleAuthButton } from '@/components/shared/GoogleAuthButton'
 import { getErrorMessage } from '@/lib/utils'
 
 export default function RegisterPage() {
-  const { register } = useAuth()
+  const { register, googleRegister } = useAuth()
   const [step, setStep] = useState<1 | 2>(1)
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     hospital_name: '', hospital_email: '', hospital_phone: '',
@@ -50,6 +52,33 @@ export default function RegisterPage() {
       setLoading(false)
     }
   }
+
+  const handleGoogleCredential = useCallback(async (credential: string) => {
+    if (!form.hospital_name || !form.hospital_email) {
+      setError('Please fill in all hospital details')
+      return
+    }
+
+    setError('')
+    setGoogleLoading(true)
+    try {
+      await googleRegister({
+        credential,
+        hospital_name: form.hospital_name,
+        hospital_email: form.hospital_email,
+        hospital_phone: form.hospital_phone,
+        admin_name: form.admin_name,
+      })
+    } catch (err) {
+      setError(getErrorMessage(err))
+    } finally {
+      setGoogleLoading(false)
+    }
+  }, [form.admin_name, form.hospital_email, form.hospital_name, form.hospital_phone, googleRegister])
+
+  const handleGoogleError = useCallback((message: string) => {
+    setError(message)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center p-4">
@@ -122,6 +151,20 @@ export default function RegisterPage() {
                 <Button type="submit" loading={loading} className="flex-1">
                   Create Account
                 </Button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-slate-200" />
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-400">or</span>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
+
+              <div className={googleLoading ? 'pointer-events-none opacity-60' : undefined}>
+                <GoogleAuthButton
+                  text="signup_with"
+                  onCredential={handleGoogleCredential}
+                  onError={handleGoogleError}
+                />
               </div>
             </form>
           )}

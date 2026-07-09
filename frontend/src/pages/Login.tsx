@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Activity, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Button, Input, ErrorMessage } from '@/components/shared'
+import { GoogleAuthButton } from '@/components/shared/GoogleAuthButton'
 import { getErrorMessage } from '@/lib/utils'
 
 const demoAccounts = [
@@ -18,10 +19,11 @@ const demoAccounts = [
 const demoPassword = 'Demo@1234'
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const { login, googleLogin } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPwd, setShowPwd] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,6 +38,22 @@ export default function LoginPage() {
       setLoading(false)
     }
   }
+
+  const handleGoogleCredential = useCallback(async (credential: string) => {
+    setError('')
+    setGoogleLoading(true)
+    try {
+      await googleLogin(credential)
+    } catch (err) {
+      setError(getErrorMessage(err))
+    } finally {
+      setGoogleLoading(false)
+    }
+  }, [googleLogin])
+
+  const handleGoogleError = useCallback((message: string) => {
+    setError(message)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center p-4">
@@ -95,6 +113,20 @@ export default function LoginPage() {
               Sign In
             </Button>
           </form>
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">or</span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <div className={googleLoading ? 'pointer-events-none opacity-60' : undefined}>
+            <GoogleAuthButton
+              text="signin_with"
+              onCredential={handleGoogleCredential}
+              onError={handleGoogleError}
+            />
+          </div>
 
           {/* Demo credentials */}
           <div className="mt-6 p-3 bg-blue-50 rounded-lg">

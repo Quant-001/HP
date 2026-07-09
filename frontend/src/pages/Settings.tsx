@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, hospitalApi } from '@/api/client'
 import { useDepartments, useStaff } from '@/hooks'
@@ -7,10 +7,17 @@ import { getErrorMessage, planConfig } from '@/lib/utils'
 import { CheckCircle2, Building2, User, Shield, AlertCircle } from 'lucide-react'
 
 const PLANS = [
-  { id: 'trial', name: 'Trial', price: '$0/mo', limits: { departments: 2, beds: 25, doctors: 3, staff: 10 }, features: ['2 departments', '25 beds', '3 doctors', 'Core front desk'] },
-  { id: 'basic', name: 'Basic', price: '$49/mo', limits: { departments: 5, beds: 50, doctors: 5, staff: 25 }, features: ['5 departments', '50 beds', '5 doctors', 'Medical records'] },
-  { id: 'advanced', name: 'Advanced', price: '$149/mo', limits: { departments: 15, beds: 200, doctors: 20, staff: 100 }, features: ['15 departments', '200 beds', '20 doctors', 'Nurse, Lab & Pharmacy'] },
-  { id: 'enterprise', name: 'Enterprise', price: '$399/mo', limits: { departments: null, beds: null, doctors: null, staff: null }, features: ['Unlimited departments', 'Unlimited beds', 'Unlimited staff', 'Payroll, audit, vendors'] },
+  { id: 'trial', name: 'Trial', monthlyPrice: 0, limits: { departments: 2, beds: 25, doctors: 3, staff: 10 }, features: ['2 departments', '25 beds', '3 doctors', 'Core front desk'] },
+  { id: 'basic', name: 'Basic', monthlyPrice: 49, limits: { departments: 5, beds: 50, doctors: 5, staff: 25 }, features: ['5 departments', '50 beds', '5 doctors', 'Medical records'] },
+  { id: 'advanced', name: 'Advanced', monthlyPrice: 149, limits: { departments: 15, beds: 200, doctors: 20, staff: 100 }, features: ['15 departments', '200 beds', '20 doctors', 'Nurse, Lab & Pharmacy'] },
+  { id: 'enterprise', name: 'Enterprise', monthlyPrice: 399, limits: { departments: null, beds: null, doctors: null, staff: null }, features: ['Unlimited departments', 'Unlimited beds', 'Unlimited staff', 'Payroll, audit, vendors'] },
+]
+
+const BILLING_TERMS = [
+  { months: 1, label: 'Monthly', suffix: '/mo' },
+  { months: 3, label: '3 months', suffix: '/3 mo' },
+  { months: 12, label: '12 months', suffix: '/12 mo' },
+  { months: 24, label: '24 months', suffix: '/24 mo' },
 ]
 
 export default function SettingsPage() {
@@ -22,9 +29,16 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false)
   const [upgradeLoading, setUpgradeLoading] = useState('')
   const [selectedDepartment, setSelectedDepartment] = useState('')
+  const [billingMonths, setBillingMonths] = useState(1)
 
   const { data: deptData, isLoading: departmentsLoading } = useDepartments({})
   const { data: staffData, isLoading: staffLoading } = useStaff({})
+
+  useEffect(() => {
+    if (hospital?.billing_cycle_months) {
+      setBillingMonths(hospital.billing_cycle_months)
+    }
+  }, [hospital?.billing_cycle_months])
 
   const departments = useMemo(() => (deptData as any)?.results ?? (deptData as any) ?? [], [deptData])
   const staff = useMemo(() => (staffData as any)?.results ?? (staffData as any) ?? [], [staffData])
@@ -59,7 +73,7 @@ export default function SettingsPage() {
     if (!hospital) return
     setUpgradeLoading(plan)
     try {
-      await hospitalApi.upgrade(hospital.id, plan)
+      await hospitalApi.upgrade(hospital.id, plan, plan === 'trial' ? 1 : billingMonths)
       await refreshUser()
     } catch (err) {
       console.error(err)
@@ -72,6 +86,8 @@ export default function SettingsPage() {
   const planInfo = planConfig[currentPlan] || planConfig.trial
   const usage = hospital?.subscription_usage
   const displayLimit = (limit: number | null | undefined) => limit == null ? 'Unlimited' : limit
+  const selectedTerm = BILLING_TERMS.find(term => term.months === billingMonths) ?? BILLING_TERMS[0]
+  const formatPlanPrice = (monthlyPrice: number) => monthlyPrice === 0 ? '$0' : `$${monthlyPrice * billingMonths}`
 
   return (
     <div className="page-container max-w-4xl">
@@ -167,6 +183,18 @@ export default function SettingsPage() {
                 <p className="text-sm text-slate-500 mb-3">
                   Select a department to check department needs, and compare plans against total hospital capacity: departments, beds, doctors, staff, and enabled roles.
                 </p>
+                <div className="mb-4 grid max-w-xl grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1 sm:grid-cols-4">
+                  {BILLING_TERMS.map(term => (
+                    <button
+                      key={term.months}
+                      type="button"
+                      onClick={() => setBillingMonths(term.months)}
+                      className={`rounded-lg px-3 py-2 text-sm font-bold transition ${billingMonths === term.months ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-slate-900'}`}
+                    >
+                      {term.label}
+                    </button>
+                  ))}
+                </div>
                 {departmentsLoading ? (
                   <LoadingSpinner className="py-4" />
                 ) : (
@@ -204,7 +232,17 @@ export default function SettingsPage() {
                       <h4 className="font-bold text-slate-900">{plan.name}</h4>
                       {isActive && <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">Current</span>}
                     </div>
-                    <p className="text-xl font-bold text-slate-800 mb-4">{plan.price}</p>
+                    <p className="text-xl font-bold text-slate-800">
+                      {formatPlanPrice(plan.monthlyPrice)}
+                      <span className="text-sm font-semibold text-slate-500"> {plan.id === 'trial' ? '/mo' : selectedTerm.suffix}</span>
+                    </p>
+                    <p className="mb-4 mt-1 text-xs font-medium text-slate-500">
+                      {plan.id === 'trial'
+                        ? 'Free for 1 month trial access'
+                        : billingMonths === 1
+                          ? 'Monthly billing'
+                          : `$${plan.monthlyPrice}/mo billed every ${billingMonths} months`}
+                    </p>
                     {(selectedDepartment || usage) && (
                       <div className={`mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold ${planFitsDepartment ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
                         {planFitsDepartment ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
