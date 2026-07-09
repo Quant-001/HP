@@ -1,6 +1,12 @@
 # render.yaml — Deploy Hospora on Render.com
 # docs: https://render.com/docs/blueprint-spec
 
+databases:
+  - name: hospora-db
+    databaseName: hospora
+    user: hospora
+    plan: free
+
 services:
   # ─── Backend ────────────────────────────────────────────────────────────────
   - type: web
@@ -25,7 +31,9 @@ services:
           property: host
           prepend: "https://"
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: hospora-db
+          property: connectionString
       - key: REDIS_URL
         sync: false
       - key: GOOGLE_CLIENT_ID
