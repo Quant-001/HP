@@ -9,7 +9,7 @@ export type Role =
   | 'lab_technician'
   | 'pharmacist'
 
-export type Plan = 'trial' | 'basic' | 'advanced' | 'enterprise'
+export type Plan = 'trial' | 'starter' | 'basic' | 'advanced' | 'enterprise'
 export type SubscriptionStatus = 'active' | 'suspended' | 'trial'
 
 export interface Hospital {

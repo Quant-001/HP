@@ -6,18 +6,6 @@ import { Button, Input, ErrorMessage } from '@/components/shared'
 import { GoogleAuthButton } from '@/components/shared/GoogleAuthButton'
 import { getErrorMessage } from '@/lib/utils'
 
-const demoAccounts = [
-  { label: 'Super Admin', email: 'superadmin@hospora.test' },
-  { label: 'Admin', email: 'admin@cityhospital.com' },
-  { label: 'Doctor', email: 'jcarter@cityhospital.com' },
-  { label: 'Receptionist', email: 'reception@cityhospital.com' },
-  { label: 'Nurse', email: 'nurse@cityhospital.com' },
-  { label: 'Lab Tech', email: 'lab@cityhospital.com' },
-  { label: 'Pharmacist', email: 'pharmacy@cityhospital.com' },
-]
-
-const demoPassword = 'Demo@1234'
-
 export default function LoginPage() {
   const { login, googleLogin } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
@@ -126,26 +114,6 @@ export default function LoginPage() {
               onCredential={handleGoogleCredential}
               onError={handleGoogleError}
             />
-          </div>
-
-          {/* Demo credentials */}
-          <div className="mt-6 p-3 bg-blue-50 rounded-lg">
-            <p className="text-xs font-semibold text-blue-700 mb-2">Demo Credentials</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {demoAccounts.map(account => (
-                <button
-                  key={account.email}
-                  type="button"
-                  onClick={() => setForm({ email: account.email, password: demoPassword })}
-                  className="text-left rounded-md border border-blue-100 bg-white/70 px-2.5 py-2 hover:border-blue-300 hover:bg-white transition-colors"
-                >
-                  <span className="block text-xs font-semibold text-blue-800">{account.label}</span>
-                  <span className="block text-[11px] text-blue-600 truncate">{account.email}</span>
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-blue-700 mt-2">Password for all demo users: {demoPassword}</p>
-            <p className="text-[11px] text-blue-600 mt-1">Patients are sample records inside the app, not login users.</p>
           </div>
         </div>
 

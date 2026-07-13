@@ -7,8 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency', currency: 'USD', minimumFractionDigits: 2,
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency', currency: 'INR', minimumFractionDigits: 2,
   }).format(amount)
 }
 
@@ -70,10 +70,11 @@ export const roleConfig: Record<Role, { label: string; className: string }> = {
 }
 
 export const planConfig = {
-  trial:      { label: 'Trial',      color: 'text-slate-600 bg-slate-100', price: '$0/mo' },
-  basic:      { label: 'Basic',      color: 'text-blue-600 bg-blue-50', price: '$49/mo' },
-  advanced:   { label: 'Advanced',   color: 'text-purple-600 bg-purple-50', price: '$149/mo' },
-  enterprise: { label: 'Enterprise', color: 'text-amber-600 bg-amber-50', price: '$399/mo' },
+  trial:      { label: 'Trial',            color: 'text-slate-600 bg-slate-100', price: '₹0/mo' },
+  starter:    { label: 'Clinic / Medical', color: 'text-cyan-700 bg-cyan-50', price: '₹1,599/mo' },
+  basic:      { label: 'Basic',            color: 'text-blue-600 bg-blue-50', price: '₹4,099/mo' },
+  advanced:   { label: 'Advanced',         color: 'text-purple-600 bg-purple-50', price: '₹12,499/mo' },
+  enterprise: { label: 'Enterprise',       color: 'text-amber-600 bg-amber-50', price: '₹33,499/mo' },
 }
 
 export function getErrorMessage(error: unknown): string {

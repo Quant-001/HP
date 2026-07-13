@@ -9,9 +9,10 @@ from django.utils import timezone
 class Hospital(models.Model):
     PLAN_CHOICES = [
         ('trial', 'Trial'),
-        ('basic', 'Basic'),
-        ('advanced', 'Advanced'),
-        ('enterprise', 'Enterprise'),
+        ('Starter', ),
+        ( 'Basic'),
+        ( 'Advanced'),
+        ( 'Enterprise'),
     ]
     BILLING_CYCLE_CHOICES = [
         (1, 'Monthly'),
@@ -41,23 +42,24 @@ class Hospital(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     PLAN_CATALOG = {
-        'trial': {
-            'label': 'Trial',
-            'price': '$0/mo',
-            'limits': {'departments': 2, 'beds': 25, 'doctors': 3, 'staff': 10},
+        
+        'starter': {
+            'label': 'Starter',
+            'price': '₹1,599/mo',
+            'limits': {'departments': 1, 'beds': 5, 'doctors': 3, 'staff': 10},
             'roles': ['hospital_admin', 'doctor', 'receptionist'],
             'modules': ['patients', 'appointments', 'opd_queue', 'billing'],
         },
         'basic': {
             'label': 'Basic',
-            'price': '$49/mo',
+            'price': '₹4,099/mo',
             'limits': {'departments': 5, 'beds': 50, 'doctors': 5, 'staff': 25},
             'roles': ['hospital_admin', 'doctor', 'receptionist'],
             'modules': ['patients', 'appointments', 'opd_queue', 'billing', 'medical_records'],
         },
         'advanced': {
             'label': 'Advanced',
-            'price': '$149/mo',
+            'price': '₹12,499/mo',
             'limits': {'departments': 15, 'beds': 200, 'doctors': 20, 'staff': 100},
             'roles': [
                 'hospital_admin', 'doctor', 'receptionist',
@@ -70,7 +72,7 @@ class Hospital(models.Model):
         },
         'enterprise': {
             'label': 'Enterprise',
-            'price': '$399/mo',
+            'price': '₹33,499/mo',
             'limits': {'departments': None, 'beds': None, 'doctors': None, 'staff': None},
             'roles': [
                 'hospital_admin', 'doctor', 'receptionist',
@@ -96,7 +98,7 @@ class Hospital(models.Model):
             self.billing_cycle_months = 1
             self.subscription_status = 'trial'
             if not self.trial_ends_at:
-                self.trial_ends_at = timezone.now() + timedelta(days=30)
+                self.trial_ends_at = timezone.now() + timedelta(days=3)
         elif self.subscription_status == 'trial':
             self.subscription_status = 'active'
         super().save(*args, **kwargs)

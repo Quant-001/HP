@@ -146,7 +146,7 @@ export default function PharmacyPage() {
             <Input label="Generic Name" value={form.generic_name} onChange={set('generic_name')} placeholder="Acetaminophen" />
             <Select label="Category" value={form.category} onChange={set('category')} options={CATEGORY_OPTIONS} />
             <Input label="Manufacturer" value={form.manufacturer} onChange={set('manufacturer')} placeholder="PharmaCo Ltd." />
-            <Input label="Unit Price ($)" type="number" step="0.01" value={form.unit_price} onChange={set('unit_price')} min={0} required />
+            <Input label="Unit Price (₹)" type="number" step="0.01" value={form.unit_price} onChange={set('unit_price')} min={0} required />
             <Input label="Current Stock" type="number" value={form.stock} onChange={set('stock')} min={0} required />
             <Input label="Minimum Stock Alert" type="number" value={form.min_stock} onChange={set('min_stock')} min={0} />
             <div className="col-span-2">
